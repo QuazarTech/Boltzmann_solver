@@ -1,6 +1,6 @@
 import numpy as np
 
-mode = '2D2V'
+mode = '1D1V'
 
 constants = dict(
                   mass_particle      = 1.0,
@@ -64,19 +64,19 @@ boundary_conditions = dict(in_x = 'periodic',
                           )
 
 velocity_space = dict(N_vel_x   = 101,
-                      vel_x_max = 10.0, 
+                      vel_x_max = 5.0, 
 
                       N_vel_y   = 101, 
                       vel_y_max = 10.0
                      )
 
 time = dict(
-            final_time   = 0.05,
-            dt           = 0.01
+            final_time   = 2.0,
+            dt           = 0.005
            )
 
 EM_fields = dict(
-                 charge_particle = -10.0
+                 charge_particle = 0
                 )
 
 collisions = dict(

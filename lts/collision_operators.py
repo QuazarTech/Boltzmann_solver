@@ -41,19 +41,19 @@ def BGK_collision_operator(config, delta_f_hat):
 
     vel_x, vel_y = np.meshgrid(vel_x, vel_y)
 
-  tau   = config.tau
+  tau          = config.tau
 
   if(config.mode == '2D2V'):
     delta_rho_hat = np.sum(delta_f_hat) * dv_x * dv_y
-    delta_T_hat   = np.sum(delta_f_hat * (0.5*(vel_x**2 + vel_y**2) -\
-                                          temperature_background
-                                          )
-                          ) * dv_x * dv_y/rho_background
     delta_v_x_hat = np.sum(delta_f_hat * vel_x) * dv_x * dv_y/rho_background
     delta_v_y_hat = np.sum(delta_f_hat * vel_y) * dv_x * dv_y/rho_background
+    delta_T_hat   = np.sum(delta_f_hat * (0.5*(vel_x**2 + vel_y**2) -\
+                                          temperature_background
+                                          )) * dv_x * dv_y/rho_background
+
   
     expr_term_1 = delta_T_hat * mass_particle**2 * rho_background * vel_x**2
-    expr_term_2 = delta_T_hat * mass_particle**2 * rho_background * vel_y
+    expr_term_2 = delta_T_hat * mass_particle**2 * rho_background * vel_y**2
     expr_term_3 = 2 * temperature_background**2 * delta_rho_hat * boltzmann_constant * mass_particle
     expr_term_4 = 2 * (delta_v_x_hat * mass_particle**2 * rho_background*vel_x +\
                        delta_v_y_hat * mass_particle**2 * rho_background *vel_y -\
