@@ -4,8 +4,7 @@
 import arrayfire as af
 import numpy as np
 
-
-def communicate_distribution_function(self, performance_test_flag = False):
+def communicate_f(self):
     """
     Used in communicating the values at the boundary zones
     for each of the local vectors among all procs.
@@ -13,16 +12,14 @@ def communicate_distribution_function(self, performance_test_flag = False):
     (and periodic B.C's) procedures for the distribution
     function array.
     """
-    if(performance_test_flag == True):
+    if(self.performance_test_flag == True):
         tic = af.time()
     
-    N_ghost = self.N_ghost
+    N_g = self.N_ghost
 
+    self._local_value_f[:] = np.array(self.f)
     # Global value is non-inclusive of the ghost-zones:
-    self._glob_value_f[:] = np.array(self.f[N_ghost:-N_ghost, 
-                                            N_ghost:-N_ghost
-                                           ]
-                                    )
+    self._glob_value_f[:] = (self._local_value_f[:])[N_g:-N_g, N_g:-N_g]
     
     # The following function takes care of periodic boundary conditions,
     # and interzonal communications:
@@ -33,7 +30,7 @@ def communicate_distribution_function(self, performance_test_flag = False):
 
     af.eval(self.f)
 
-    if(performance_test_flag == True):
+    if(self.performance_test_flag == True):
         af.sync()
         toc = af.time()
         self.time_communicate_f += toc - tic
@@ -41,7 +38,7 @@ def communicate_distribution_function(self, performance_test_flag = False):
     return
 
 
-def communicate_fields(self, on_fdtd_grid=False, performance_test_flag = False):
+def communicate_fields(self, on_fdtd_grid=False):
     """
     Used in communicating the values at the boundary zones
     for each of the local vectors among all procs.
@@ -49,7 +46,7 @@ def communicate_fields(self, on_fdtd_grid=False, performance_test_flag = False):
     (and periodic B.C's) procedures for the EM field
     arrays.
     """
-    if(performance_test_flag == True):
+    if(self.performance_test_flag == True):
         tic = af.time()
     
     N_ghost = self.N_ghost
@@ -109,7 +106,7 @@ def communicate_fields(self, on_fdtd_grid=False, performance_test_flag = False):
 
         af.eval(self.E1, self.E2, self.E3, self.B1, self.B2, self.B3)
 
-    if(performance_test_flag == True):
+    if(self.performance_test_flag == True):
         af.sync()
         toc = af.time()
         self.time_communicate_fields += toc - tic
