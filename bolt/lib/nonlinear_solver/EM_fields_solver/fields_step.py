@@ -3,7 +3,7 @@
 
 import arrayfire as af
 
-from .electrostatic import fft_poisson
+from .electrostatic import fft_poisson, compute_electrostatic_fields
 from .fdtd_explicit import fdtd, fdtd_grid_to_ck_grid
 from .. import interpolation_routines
 
@@ -12,12 +12,17 @@ def fields_step(self, dt):
     if(self.performance_test_flag == True):
         tic = af.time()
     
-    if (self.physical_system.params.fields_solver == 'fft'):
-        fft_poisson(self)
+    if (self.physical_system.params.fields_type == 'electrostatic'):
+        if (self.physical_system.params.fields_solver == 'fft'):
+            fft_poisson(self)
+        elif (self.physical_system.params.fields_solver == 'SNES'):
+            #compute_electrostatic_fields(self)
+            pass
+
         self._communicate_fields()
         self._apply_bcs_fields()
 
-    elif (self.physical_system.params.fields_solver == 'fdtd'):
+    elif (self.physical_system.params.fields_type == 'electrodynamic'):
         # Will return a flattened array containing the values of
         # J1,2,3 in 2D space:
         self.J1 =   self.physical_system.params.charge_electron \

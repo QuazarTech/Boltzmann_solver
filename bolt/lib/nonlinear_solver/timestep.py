@@ -18,20 +18,7 @@ from .EM_fields_solver.fields_step import fields_step
 # Defining the operators:
 # When using FVM:
 def op_fvm_q(self, dt):
-    
-    self._communicate_f()
-    self._apply_bcs_f()
 
-    if(self.performance_test_flag == True):
-        tic = af.time()
-
-    fvm_timestep_RK2(self, dt)
-
-    if(self.performance_test_flag == True):
-        af.sync()
-        toc = af.time()
-        self.time_fvm_solver += toc - tic
-    
     # Solving for tau = 0 systems
     if(af.any_true(self.physical_system.params.tau(self.q1_center, self.q2_center,
                                                    self.p1, self.p2, self.p3
@@ -47,11 +34,28 @@ def op_fvm_q(self, dt):
                               self.physical_system.params, 
                               True
                              ) 
+
+        fvm_timestep_RK2(self, dt)
         
         if(self.performance_test_flag == True):
             af.sync()
             toc = af.time()
             self.time_sourcets += toc - tic
+
+        af.eval(self.f)
+        return
+    
+
+    if(self.performance_test_flag == True):
+        tic = af.time()
+
+    fvm_timestep_RK2(self, dt)
+
+    if(self.performance_test_flag == True):
+        af.sync()
+        toc = af.time()
+        self.time_fvm_solver += toc - tic
+    
 
     af.eval(self.f)
     return
@@ -91,7 +95,7 @@ def op_solve_src(self, dt):
                                  self.compute_moments, 
                                  self.physical_system.params
                                 )
-    
+
     if(self.performance_test_flag == True):
         af.sync()
         toc = af.time()

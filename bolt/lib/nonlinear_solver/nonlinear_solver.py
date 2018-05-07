@@ -53,7 +53,7 @@ from .utils.bandwidth_test import bandwidth_test
 from .utils.print_with_indent import indent
 from .utils.performance_timings import print_table
 from .compute_moments import compute_moments as compute_moments_imported
-from .EM_fields_solver.electrostatic import fft_poisson
+from .EM_fields_solver.electrostatic import fft_poisson, poisson_eqn_3D
 
 class nonlinear_solver(object):
     """
@@ -208,21 +208,53 @@ class nonlinear_solver(object):
                                               comm          = self._comm
                                              )
 
-        # Additionally, a DMDA object also needs to be created for 
-        # the KSP/SNES solver with a DOF of 1. This is used to solve for
-        # the electrostatic case:
+        # Additionally, a DA object also needs to be created for the SNES solver
+        # with a DOF of 1:
+	# TODO: Remove the following hardcoded values
+        self.length_multiples_q1 = .5
+        self.length_multiples_q2 = .25
+        self.dq3 = self.dq1
+        self.location_in_q3      = 0.3
+        self.q3_3D_start =  0.; self.q3_3D_end = 1.3
 
-        self._da_ksp = PETSc.DMDA().create([self.N_q1, self.N_q2],
-                                            stencil_width = self.N_ghost,
-                                            boundary_type = (petsc_bc_in_q1,
-                                                             petsc_bc_in_q2
-                                                            ),
-                                            proc_sizes    = (PETSc.DECIDE,
-                                                             PETSc.DECIDE
-                                                            ),
-                                            stencil_type  = 1,
-                                            comm          = self._comm
-                                          )
+        self.N_q1_poisson = (2*self.length_multiples_q1+1)*self.N_q1
+        self.N_q2_poisson = (2*self.length_multiples_q2+1)*self.N_q2
+        self.N_q3_poisson = (int)((self.q3_3D_end - self.q3_3D_start) / self.dq3)
+        self.N_ghost_poisson = self.N_ghost
+
+        PETSc.Sys.Print("dq3 = ", self.dq3, "N_q3 = ", self.N_q3_poisson)
+        self._da_snes = PETSc.DMDA().create([self.N_q1_poisson, 
+	                                     self.N_q2_poisson,
+					     self.N_q3_poisson],
+                                             stencil_width = self.N_ghost_poisson,
+                                             boundary_type = (petsc_bc_in_q1,
+                                                              petsc_bc_in_q2,
+							      'periodic'
+                                                             ),
+                                             proc_sizes    = (PETSc.DECIDE,
+                                                              PETSc.DECIDE,
+                                                              1
+                                                             ),
+                                             stencil_type  = 0, # Star stencil
+                                             dof           = 1,
+                                             comm          = self._comm
+                                           )
+        self.snes = PETSc.SNES().create()
+        self.poisson = poisson_eqn_3D(self)
+        self.snes.setFunction(self.poisson.compute_residual,
+	                      self.poisson.glob_residual
+			     )
+    
+        self.snes.setDM(self._da_snes)
+        self.snes.setFromOptions()
+
+        # Obtaining the left-bottom corner coordinates
+        # (lowest values of the canonical coordinates in the local zone)
+        ((i_q1_start, i_q2_start), (N_q1_local, N_q2_local)) = self._da_f.getCorners()
+        self.i_q1_start = i_q1_start
+        self.i_q2_start = i_q2_start
+        self.N_q1_local = N_q1_local
+        self.N_q2_local = N_q2_local
 
         # This DA is used by the FileIO routine dump_moments():
         self._da_dump_moments = PETSc.DMDA().create([self.N_q1, self.N_q2],
@@ -235,6 +267,8 @@ class nonlinear_solver(object):
                                                                  ),
                                                     comm       = self._comm
                                                    )
+        # For dumping aux arrays:
+        self.dump_aux_arrays_initial_call = 1
 
         # Creation of the local and global vectors from the DA:
         # This is for the distribution function
@@ -245,7 +279,7 @@ class nonlinear_solver(object):
         # the communication routines for EM fields
         self._glob_fields  = self._da_fields.createGlobalVec()
         self._local_fields = self._da_fields.createLocalVec()
-
+    
         # The following vector is used to dump the data to file:
         self._glob_moments = self._da_dump_moments.createGlobalVec()
 
@@ -451,7 +485,6 @@ class nonlinear_solver(object):
                                                       p1_center,
                                                       p3_center
                                                      )
-
         # Flattening the arrays:
         p1_center = af.flat(af.to_array(p1_center))
         p2_center = af.flat(af.to_array(p2_center))
@@ -586,15 +619,16 @@ class nonlinear_solver(object):
     _apply_bcs_f      = apply_boundary_conditions.apply_bcs_f
     _apply_bcs_fields = apply_boundary_conditions.apply_bcs_fields
 
-    strang_timestep = timestep.strang_step
-    lie_timestep    = timestep.lie_step
-    swss_timestep   = timestep.swss_step
-    jia_timestep    = timestep.jia_step
+    strang_timestep  = timestep.strang_step
+    lie_timestep     = timestep.lie_step
+    swss_timestep    = timestep.swss_step
+    jia_timestep     = timestep.jia_step
 
     compute_moments = compute_moments_imported
 
     dump_distribution_function = dump.dump_distribution_function
     dump_moments               = dump.dump_moments
+    dump_aux_arrays            = dump.dump_aux_arrays
 
     load_distribution_function = load.load_distribution_function
     print_performance_timings  = print_table
