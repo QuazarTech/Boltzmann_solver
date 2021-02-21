@@ -17,7 +17,13 @@ def f_left(f, t, q1, q2, p1, p2, p3, params):
     
     t     = params.current_time
     omega = 2. * np.pi * params.AC_freq
-    vel_drift_x_in  = params.vel_drift_x_in  * np.sin(omega*t)
+    
+    if (params.source_type == 'AC'):
+        vel_drift_x_in  = params.vel_drift_x_in  * np.sin(omega*t)
+    elif (params.source_type == 'DC'):
+        vel_drift_x_in  = params.vel_drift_x_in
+    else:
+        raise NotImplementedError('Unsupported source_type')
 
     if (params.p_space_grid == 'cartesian'):
         p_x = p1 
@@ -47,7 +53,12 @@ def f_left(f, t, q1, q2, p1, p2, p3, params):
     elif (params.contact_geometry=="turn_around"):
         # Contacts on the same side of the device
 
-        vel_drift_x_out = -params.vel_drift_x_in * np.sin(omega*t)
+        if (params.source_type == 'AC'):
+            vel_drift_x_out = -params.vel_drift_x_in * np.sin(omega*t)
+        elif (params.source_type == 'DC'):
+            vel_drift_x_out = -params.vel_drift_x_in
+        else:
+            raise NotImplementedError('Unsupported source_type')
 
         fermi_dirac_out = (1./(af.exp( (E_upper - vel_drift_x_out*p_x - mu)/(k*T) ) + 1.)
                           )
@@ -72,7 +83,12 @@ def f_right(f, t, q1, q2, p1, p2, p3, params):
 
     t     = params.current_time
     omega = 2. * np.pi * params.AC_freq
-    vel_drift_x_out = params.vel_drift_x_out * np.sin(omega*t)
+    if (params.source_type == 'AC'):
+        vel_drift_x_out = params.vel_drift_x_out * np.sin(omega*t)
+    elif (params.source_type == 'DC'):
+        vel_drift_x_out = params.vel_drift_x_out 
+    else:
+        raise NotImplementedError('Unsupported source_type')
     
     if (params.p_space_grid == 'cartesian'):
         p_x = p1 

@@ -289,7 +289,7 @@ class nonlinear_solver(object):
 
         self._da_dump_moments = PETSc.DMDA().create([self.N_q1, self.N_q2],
                                                     dof        =   self.N_species
-                                                                 * len(attributes),
+                                                            * (len(attributes)-3), # don't count af, integral_over_p, and params in moments.py
                                                     proc_sizes = (nproc_in_q1, 
                                                                   nproc_in_q2
                                                                  ),

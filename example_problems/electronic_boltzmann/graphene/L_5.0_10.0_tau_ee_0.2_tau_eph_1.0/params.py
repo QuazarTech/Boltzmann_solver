@@ -42,6 +42,11 @@ solve_for_equilibrium = 0
 
 # File-writing Parameters:
 dump_steps = 10
+# Set to zero for no file-writing
+dt_dump_f       = 100 #ps
+# ALWAYS set dump moments and dump fields at same frequency:
+dt_dump_moments = dt_dump_fields = 10 #ps
+
 
 # Time parameters:
 dt      = 0.025/2 # ps
@@ -79,7 +84,8 @@ initial_temperature = 12e-4
 initial_mu          = 0.015
 vel_drift_x_in      = 1e-4*fermi_velocity
 vel_drift_x_out     = 1e-4*fermi_velocity
-AC_freq             = 1./100 # ps^-1
+source_type         = 'AC' # Select 'AC' or 'DC'
+AC_freq             = 1./100 # ps^-1 (only for AC)
 
 B3_mean = 1. # T
 
@@ -150,6 +156,10 @@ def band_velocity(p1, p2):
 
     af.eval(upper_band_velocity[0], upper_band_velocity[1])
     return(upper_band_velocity)
+
+# Restart(Set to zero for no-restart):
+latest_restart = True
+t_restart = 0
 
 @af.broadcast
 def fermi_dirac(mu, E_band):

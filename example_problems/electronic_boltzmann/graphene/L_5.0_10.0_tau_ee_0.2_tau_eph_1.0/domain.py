@@ -13,11 +13,13 @@ N_q2     = 40
 # symmetric about zero
 # TODO : Check and fix discrepancy between this and the claim
 # that p1_center = mu in polar representation
-N_p1     =  1
+N_p1     =  1 # Set equal to 1 for 1D polar
 
 # In the cartesian representation of momentum space,
 # p1 = p_x (magnitude of momentum)
 # p1_start and p1_end are set such that p1_center is 0
+
+# Uncomment the following for the cartesian representation of momentum space
 #p1_start = [-0.04]
 #p1_end   =  [0.04]
 
@@ -25,11 +27,14 @@ N_p1     =  1
 # In the 2D polar representation of momentum space,
 # p1 = p_r (magnitude of momentum)
 # p1_start and p1_end are set such that p1_center is mu
+
+# Uncomment the following for the 2D polar representation of momentum space
 #p1_start = [params.initial_mu - \
 #        16.*params.boltzmann_constant*params.initial_temperature]
 #p1_end   = [params.initial_mu + \
 #        16.*params.boltzmann_constant*params.initial_temperature]
 
+# Uncomment the following for the 1D polar representation of momentum space
 p1_start = [0.5*params.initial_mu]
 p1_end   = [1.5*params.initial_mu]
 

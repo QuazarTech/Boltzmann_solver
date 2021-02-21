@@ -39,21 +39,12 @@ def compute_moments(self, moment_name, f=None):
     if(f is None):
         f = self.f
 
-    if (self.physical_system.params.p_space_grid == 'cartesian'):
-        moment = af.broadcast(getattr(self.physical_system.moments, 
-                                      moment_name
-                                     ), f, p1, p2, p3, self.dp3 * self.dp2 * self.dp1
-                             )
-
-    elif (self.physical_system.params.p_space_grid == 'polar2D'):
-        moment = self.physical_system.params.initial_mu * \
-                 af.broadcast(getattr(self.physical_system.moments, 
-                                      moment_name
-                                     ), f, p1, p2, p3, self.dp3 * self.dp2 * self.dp1
-                             )
-
-    else:
-        raise NotImplementedError('Unsupported coordinate system in p_space')
+    #measure = (4./(2.*np.pi*self.physical_system.params.h_bar)**2) * self.dp3 * self.dp2 * self.dp1
+        
+    moment = af.broadcast(getattr(self.physical_system.moments, 
+                                  moment_name
+                                 ), f, p1, p2, p3, self.physical_system.params.integral_measure
+                         )
 
     af.eval(moment)
     return (moment)

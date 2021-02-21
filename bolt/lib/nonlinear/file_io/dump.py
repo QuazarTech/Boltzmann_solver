@@ -35,7 +35,7 @@ def dump_aux_arrays(self, arrays, name, file_name):
 
     af.flat(array_to_dump).to_ndarray(self._glob_aux_array)
     PETSc.Object.setName(self._glob_aux, name)
-    viewer = PETSc.Viewer().createHDF5(file_name + '.h5', 'w', comm=self._comm)
+    viewer = PETSc.Viewer().createBinary(file_name + '.bin', 'w', comm=self._comm)
     viewer(self._glob_aux)
 
 def dump_moments(self, file_name):
@@ -98,11 +98,18 @@ def dump_moments(self, file_name):
 
     attributes = [a for a in dir(self.physical_system.moments) if not a.startswith('_')]
 
-    # Removing utility functions:
-    if('integral_over_v' in attributes):
-        attributes.remove('integral_over_v')
+    # Removing utility functions and imported modules:
+    if('integral_over_p' in attributes):
+        attributes.remove('integral_over_p')
+    if('params' in attributes):
+        attributes.remove('params')
+    if('af' in attributes):
+        attributes.remove('af')
+    for i in range(len(attributes)):
+        print("i = ", i, attributes[i])
 
     for i in range(len(attributes)):
+        #print("i = ", i, attributes[i])
         if(i == 0):
             array_to_dump = self.compute_moments(attributes[i])
         else:
